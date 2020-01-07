@@ -1,0 +1,311 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+import numpy
+import pandas
+import random
+import math
+from IPython.display import clear_output
+from IPython.core.display import HTML
+import os
+
+
+# In[2]:
+
+
+suits = ('Hearts', 'Diamonds', 'Spades', 'Clubs')
+ranks = ('Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King', 'Ace')
+values = {'Two':2, 'Three':3, 'Four':4, 'Five':5, 'Six':6, 'Seven':7, 'Eight':8, 'Nine':9, 'Ten':10, 'Jack':10,
+         'Queen':10, 'King':10, 'Ace':11}
+
+
+# In[3]:
+
+
+def chooseCard():
+    randSuit = math.ceil(random.random()*(len(suits)-1))
+    randRank = math.ceil(random.random()*(len(ranks)-1))
+    return (ranks[randRank] + ' of ' + suits[randSuit])
+    
+ 
+
+
+# In[4]:
+
+
+class Card():
+    
+    def __init__(self,suit,rank):
+        self.suit = suit
+        self.rank = rank
+        
+    def show(self):
+        print((self.rank) + ' of ' + self.suit)
+        
+
+
+# In[ ]:
+
+
+
+
+
+# In[5]:
+
+
+class Deck():
+    
+    def __init__(self):
+        self.deck = []
+        for suit in suits:
+            for rank in ranks:
+                self.deck.append(rank + ' of ' + suit)
+                
+    def show(self):
+        return self.deck
+                    
+
+    def shuffle(self):
+        random.shuffle(self.deck)
+        
+        
+
+
+# In[ ]:
+
+
+
+
+
+# In[6]:
+
+
+class Player():
+    
+    def __init__(self,chips = 100,cards = 0,bustSum = 0):
+        self.cards = []
+        self.chips = chips
+        self.bustSum = bustSum
+        
+    def bust(self):
+        self.bustSum = 0
+        for card in self.cards:
+                self.bustSum = self.bustSum + (values[card.split(' of')[0]])
+                
+        if(self.bustSum > 21):
+            return(1)
+        else:
+            return(0)
+            
+        
+    def bet(self,bet):
+        self.chips = self.chips - bet
+        print('\nAvailable chips : ' + str(self.chips))
+        
+    
+    
+        
+    def hit(self):
+        self.cards.append(chooseCard())
+        print('\nThe Players cards :\n')
+        for card in self.cards:
+                print(card)
+        self.adjustAce()
+        if (self.bust()):
+            
+            
+            
+            print('\nBusted, Dealer Wins\n')
+            newGame = input('Press any key and hit Enter for new game\nPress E and hit Enter to Exit Game')
+            if(newGame.upper() != 'E'):
+                playerSetup()
+            return (2)
+        else:
+            print('\nPlayers Hand -\n')
+            print(self.bustSum)
+            return (3)
+            
+        
+        
+    def start(self):
+        self.cards.append(chooseCard())
+        self.cards.append(chooseCard())
+        
+        print('\nThe Players cards :\n')
+        for card in self.cards:
+                print(card)
+        
+        print('\nPlayers Hand -\n')
+        if(self.bust() == 0):
+            print(self.bustSum)
+            return self.bustSum
+                
+    def hitStreak(self):
+        
+            
+            
+            hitOrStand = 'h'
+            while (hitOrStand.upper() != 'S' and self.bust() == 0):
+                
+                hitOrStand = input('\nEnter H to take another card from the Deck \nEnter S to Stand\n')
+                if (hitOrStand.upper() == 'H'):
+                    self.hit()
+                
+                
+                
+            
+            if(hitOrStand.upper() == 'S'):
+                print('\nNow lets see the Dealers cards')
+                return (1)
+                    
+                
+                           
+        
+    def adjustAce(self):
+        for card in self.cards:
+            if (card.split(' of')[0] == 'Ace'):
+                self.bust()
+                if(self.bustSum >21):
+                    
+                    values['Ace'] = 1
+                    return (10)
+                    
+        
+        
+
+
+# In[ ]:
+
+
+
+
+
+# In[7]:
+
+
+class Dealer():
+    
+    def __init__(self, cards = 0, bustSum = 0,justSum = 0):
+        self.cards = []
+        self.bustSum = bustSum
+        self.justSum = justSum
+        
+        
+    def bust(self):
+        self.bustSum = 0
+        for card in self.cards:
+                self.bustSum = self.bustSum + (values[card.split(' of')[0]])
+                self.justSum = self.justSum + (values[card.split(' of')[0]])
+        if(self.bustSum > 21):
+            return(1)
+        else:
+            return(0)
+            
+    def hit(self):
+        self.cards.append(chooseCard())
+        print('\nThe Dealers cards :\n')
+        for card in self.cards:
+            print(card)
+        self.adjustAce()
+        if (self.bust() == 1):
+            
+            print('\nBusted, Player won\n')
+            newGame = input('Press any key and hit Enter for new game\nPress E and hit Enter to Exit Game')
+            if(newGame.upper() != 'E'):
+                playerSetup()
+        
+    def start(self):
+        self.cards.append(chooseCard())
+        self.cards.append(chooseCard())
+        
+        print('\nThe Dealers Show Up card :\n')
+        print(self.cards[1] )
+        
+    def loop(self):
+        if (self.bust() == 0):
+            while(self.justSum < 17):
+                self.hit()
+                
+        if(self.bust() == 0):
+            print('\nThe Dealers cards :\n')
+            for card in self.cards:
+                print(card)
+                
+            print('\nFinal Dealers Hand -\n')
+            print(self.bustSum)
+            return self.bustSum
+        
+    def adjustAce(self):
+        for card in self.cards:
+            if (card.split(' of')[0] == 'Ace'):
+                self.bust()
+                if(self.bustSum >21):
+                    
+                    values['Ace'] = 1
+                    return (10)
+                
+        
+
+
+# In[8]:
+
+
+def playerSetup():
+    
+    myPlayer = Player()
+    
+    betChips = int(input('How many chips would you like to bet?'))
+    myPlayer.bet(betChips)
+    if(myPlayer.start() == 21):
+        print('Player has won!')
+        newGame = input('Press any key and hit Enter for new game\nPress E and hit Enter to Exit Game')
+        if(newGame.upper() != 'E'):
+            playerSetup()
+    else:
+        myDealer = Dealer()
+        myDealer.start()
+        con = myPlayer.hitStreak()
+        if(con == 1):
+            myDealer.loop()
+            compareHand(myPlayer.bustSum, myDealer.bustSum)
+        elif(con == 2):
+            return
+        elif(con == 3):
+            myDealer.loop()
+            compareHand(myPlayer.bustSum, myDealer.bustSum)
+            
+            
+            
+        
+    
+    
+    
+def compareHand(playerHand,dealerHand):
+    if(playerHand > dealerHand):
+        print('Player has won!')
+    else:
+        print('Dealer has won!')
+        
+    newGame = input('Press any key and hit Enter for new game\nPress E and hit Enter to Exit Game')
+    if(newGame.upper() != 'E'):
+        playerSetup()
+    
+    
+    
+        
+    
+
+
+# In[9]:
+
+
+startGame = input('Welcome to BlackJack. Press any key and hit Enter to start playing')
+
+if(startGame):
+    playerSetup()
+
+    
+
